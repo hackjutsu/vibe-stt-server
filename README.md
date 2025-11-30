@@ -1,6 +1,8 @@
 # Vibe STT Server
 
-FastAPI-based one-shot Whisper transcription service following the [design](./discussions/init_design.md).
+[GitHub Repository](https://github.com/hackjutsu/vibe-stt-server).
+
+FastAPI-based one-shot Whisper transcription service following the [design](./discussions/init_design.md). This is a project for near real-time speech-to-text transcription in headless Ubuntu machine(with Nvidia GPU) to empower [the local voice chatbot project](https://github.com/hackjutsu/vibe-speech). When running in a more powerful machine, the speech-to-text latency is reduced from seconds to <0.5s with the model `large-v3-turbo` compared to running in the local dev machine.
 
 ## Endpoints
 - `GET /health` → `{ "status": "ok" }`
