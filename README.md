@@ -50,13 +50,35 @@ pip install -r requirements.txt
 python -m app.main
 ```
 
-## Run (Windows 11 + RTX 4090, GPU)
+## Run (Windows 11 + NVIDIA GPU via WSL2 Ubuntu)
+The easiest way to use CUDA with faster-whisper on Windows is through WSL2 (Linux wheels ship with GPU support).
+
+```powershell
+wsl --install Ubuntu    # once, if not already installed
+wsl -d Ubuntu
+```
+
+Inside the Ubuntu shell:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+export WHISPER_DEVICE=cuda
+export WHISPER_COMPUTE_TYPE=float16   # or int8_float16 if VRAM is tight
+python -m app.main
+```
+
+Prereqs:
+- Recent NVIDIA Windows driver with WSL2 CUDA support (same requirement as Docker GPU).
+- In WSL2, verify GPU is visible before running the server: `nvidia-smi`.
+
+## Run (Windows 11 native, CPU-only)
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-$env:WHISPER_DEVICE = "cuda"
-$env:WHISPER_COMPUTE_TYPE = "float16"   # or int8_float16 if VRAM tight
+$env:WHISPER_DEVICE = "cpu"            # Windows wheels are CPU-only
+$env:WHISPER_COMPUTE_TYPE = "auto"
 python -m app.main
 ```
 
