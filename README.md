@@ -1,6 +1,6 @@
 # Vibe STT Server
 
-FastAPI-based one-shot Whisper transcription service following `discussions/init_design.md`.
+FastAPI-based one-shot Whisper transcription service following the [design](./discussions/init_design.md).
 
 ## Endpoints
 - `GET /health` → `{ "status": "ok" }`
@@ -30,6 +30,21 @@ Response:
   }
 }
 ```
+- `language` is optional; when omitted, Whisper auto-detects the language.
+- `beam_size` defaults to the server setting if not provided.
+
+### GET /info response
+```json
+{
+  "model": "large-v3-turbo",
+  "device": "auto",
+  "compute_type": "auto",
+  "sample_rate": 16000,
+  "num_workers": 1,
+  "cpu_threads": 0,
+  "default_beam_size": 5
+}
+```
 
 ## Config (env vars)
 - `WHISPER_MODEL` (default: `large-v3-turbo`)
@@ -42,7 +57,21 @@ Response:
 - `PORT` (default: `8000`)
 - `LOG_LEVEL` (default: `INFO`)
 
-## Run (macOS dev, CPU)
+## Run 
+
+### macOS dev, CPU
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m app.main
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000  # for local dev hot-reload
+```
+
+### Linux with GPU
+Check out this [summary](./discussions/resolve_whisper_linux_gpu_deps.md) on how to resolve dependencies issue with running Nvidia GPU with Ubuntu.
+
+For local development.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -50,47 +79,7 @@ pip install -r requirements.txt
 python -m app.main
 ```
 
-## Run (Windows 11 + NVIDIA GPU via WSL2 Ubuntu)
-The easiest way to use CUDA with faster-whisper on Windows is through WSL2 (Linux wheels ship with GPU support).
-
-```powershell
-wsl --install Ubuntu    # once, if not already installed
-wsl -d Ubuntu
-```
-
-Inside the Ubuntu shell:
+For running service as a detached tmux session
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-export WHISPER_DEVICE=cuda
-export WHISPER_COMPUTE_TYPE=float16   # or int8_float16 if VRAM is tight
-python -m app.main
+tmux new -s stt-session -d 'uvicorn app.main:app --host 0.0.0.0 --port 8000'
 ```
-
-Prereqs:
-- Recent NVIDIA Windows driver with WSL2 CUDA support (same requirement as Docker GPU).
-- In WSL2, verify GPU is visible before running the server: `nvidia-smi`.
-
-## Run (Windows 11 native, CPU-only)
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:WHISPER_DEVICE = "cpu"            # Windows wheels are CPU-only
-$env:WHISPER_COMPUTE_TYPE = "auto"
-python -m app.main
-```
-
-Use your client to POST to `http://<host>:8000/transcribe` with gzip enabled. The server preloads the model at startup to avoid first-request latency.
-
-### Verify GPU is being used (Windows)
-1. Ensure `/info` shows `"device": "cuda"` and your `compute_type` (e.g., `float16`).
-2. While sending a `/transcribe`, watch GPU activity:
-   - PowerShell loop:
-     ```powershell
-     while ($true) { nvidia-smi --query-compute-apps=pid,process_name,used_gpu_memory --format=csv; Start-Sleep 1; Clear-Host }
-     ```
-     You should see a `python` process with non-zero `used_gpu_memory`.
-   - Or `nvidia-smi dmon` for a short live view.
-   - Task Manager → Performance → GPU also shows compute/utilization.
