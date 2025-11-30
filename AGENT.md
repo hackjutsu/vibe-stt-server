@@ -128,6 +128,8 @@ At the end of each work chunk:
 
 > **Here is the current progress. Should I continue or adjust anything?**
 
+- If code can be run or tested, include clear run/test commands. If not, state explicit next steps so the user knows what comes next.
+
 ---
 
 ## Communication Guidelines
@@ -136,4 +138,3 @@ At the end of each work chunk:
 - Use headings and bullet lists for readability.  
 - Update the TODO list whenever the plan changes.  
 - When unsure about user intent, ask before proceeding.  
-
